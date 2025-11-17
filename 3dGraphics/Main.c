@@ -4,9 +4,9 @@
 #include <SDL.h>
 #include "Display.h"
 #include "Vector.h"
+#include "mesh.h"
 
-
-
+triangle_t trianglesToRender[NUM_MESH_FACES];
 
 float fovFactor = 640;
 vec3_t cubeRotation = { 0,0,0 };
@@ -67,31 +67,50 @@ void update(void)
 	cubeRotation.y += 0.01;
 	cubeRotation.z += 0.01;
 
-	//for (int i = 0; i < N_POINTS; i++)
-	//{
-	//	vec3_t point = cubePoints[i];
+	for (int i = 0; i < NUM_MESH_FACES; i++)
+	{
+		face_t meshFace = meshFaces[i];
 
-	//	vec3_t transformedPoint = vec3RotateX(point, cubeRotation.x);
-	//	transformedPoint = vec3RotateY(transformedPoint, cubeRotation.y);
-	//	transformedPoint = vec3RotateZ(transformedPoint, cubeRotation.z);
-	//	
-	//	
-	//	transformedPoint.z -= camer_position.z;
-	//	vec2_t projectedPoint =  project(transformedPoint);
-	//	
+		vec3_t faceVerticies[3];
 
-	//	projectedPoints[i] = projectedPoint;
-	//}
+		faceVerticies[0] = meshVerticies[meshFace.a-1];
+		faceVerticies[1] = meshVerticies[meshFace.b-1];
+		faceVerticies[2] = meshVerticies[meshFace.c-1];
+
+
+		triangle_t projectedTriange;
+		for (int j = 0; j < 3; j++)
+		{
+			vec3_t transformedVertex = faceVerticies[j];
+			transformedVertex = vec3RotateX(transformedVertex, cubeRotation.x);
+			transformedVertex = vec3RotateY(transformedVertex, cubeRotation.y);
+			transformedVertex = vec3RotateZ(transformedVertex, cubeRotation.z);
+
+			transformedVertex.z -= camer_position.z;
+
+			vec2_t projectedPoint = project(transformedVertex);
+
+			projectedPoint.x += (windowWidth / 2);
+			projectedPoint.y += (windowHeight / 2);
+
+			projectedTriange.points[j] = projectedPoint;
+		}
+
+		trianglesToRender[i] = projectedTriange;
+		
+	}
 }
 
 void render(void)
 {
 	
-	//for (int i = 0; i < N_POINTS; i++)
-	//{
-	//	vec2_t point = projectedPoints[i];
-	//	drawRectangle(point.x + (windowWidth/2), point.y + (windowHeight/2), 4, 4, 0xFFFFFF00);
-	//}
+	for (int i = 0; i < NUM_MESH_FACES; i++)
+	{
+		triangle_t triangleToRender = trianglesToRender[i];
+		drawRectangle(triangleToRender.points[0].x, triangleToRender.points[0].y, 4, 4, 0xFFFFFF00);
+		drawRectangle(triangleToRender.points[1].x, triangleToRender.points[1].y, 4, 4, 0xFFFFFF00);
+		drawRectangle(triangleToRender.points[2].x, triangleToRender.points[2].y, 4, 4, 0xFFFFFF00);
+	}
 	
 	renderColourBuffer();
 	clearColourBuffer(0xFF000000);
