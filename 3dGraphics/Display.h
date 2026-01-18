@@ -18,6 +18,8 @@ extern int windowHeight;
 bool initialise_window(void);
 void drawRectangle(int xPos, int yPos, int width, int height, uint32_t colour);
 void drawPixel(int x, int y, uint32_t colour);
+void drawLine(int x0, int y0, int x1, int y1, uint32_t colour);
+void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t colour);
 void drawGrid();
 void clearColourBuffer(uint32_t colour);
 void renderColourBuffer();

@@ -56,6 +56,34 @@ void drawPixel(int x, int y, uint32_t colour)
 	}
 }
 
+void drawLine(int x0, int y0, int x1, int y1, uint32_t colour)
+{
+	int deltaX = x1 - x0;
+	int deltaY = y1 - y0;
+
+	int longestSideLength = (abs(deltaX) >= abs(deltaY)) ?abs(deltaX) : abs(deltaY);
+
+	float xInc = deltaX / (float)longestSideLength;
+	float yInc = deltaY / (float)longestSideLength;
+
+	float currentX = x0;
+	float currentY = y0;
+	for (int i = 0; i <= longestSideLength; i++)
+	{
+		
+		drawPixel(round(currentX), round(currentY), colour);
+		currentX += xInc;
+		currentY += yInc;
+	}
+}
+
+
+void drawTriangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t colour)
+{
+	drawLine(x0, y0, x1, y1, colour);
+	drawLine(x1, y1, x2, y2, colour);
+	drawLine(x2, y2, x0, y0, colour);
+}
 
 void drawRectangle(int xPos, int yPos, int width, int height, uint32_t colour)
 {
