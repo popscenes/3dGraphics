@@ -81,7 +81,7 @@ void loadObjDataFile(char* fileName)
             float vecZ = atof(token);
 
             vec3_t cubeVertex = { vecX, vecY, vecZ };
-            array_push(mesh.verticies, cubeVertex);
+            array_push(mesh.vertices, cubeVertex);
 
         }
 
@@ -99,9 +99,10 @@ void loadObjDataFile(char* fileName)
             token = strtok_s(NULL, " ", &next_token1);
             int faceC = atoi(&token[0]);
 
-            face_t cubeFace = { faceA, faceB, faceC, 0xFFFF0100 };
+            face_t cubeFace = { faceA, faceB, faceC };
             array_push(mesh.faces, cubeFace);
         }
 
     }
+}
 
