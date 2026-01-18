@@ -43,7 +43,9 @@ bool initialise_window(void)
 		return false;
 	}
 
-	SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+	colourBuffer = (uint32_t*)malloc(sizeof(uint32_t) * windowWidth * windowHeight);
+
+	//SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
 	return true;
 }

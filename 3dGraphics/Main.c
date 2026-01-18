@@ -18,7 +18,6 @@ int previousFrameTime = 0;
 
 void setup(void)
 {
-	colourBuffer = (uint32_t*)malloc(sizeof(uint32_t) * windowWidth * windowHeight);
 	loadObjDataFile("./assets/cube.obj");
 	//LoadCubeMeshData();
 }
