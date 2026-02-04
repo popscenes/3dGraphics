@@ -18,7 +18,7 @@ int previousFrameTime = 0;
 
 void setup(void)
 {
-	loadObjDataFile("./assets/cube.obj");
+	loadObjDataFile("./assets/f22.obj");
 	//LoadCubeMeshData();
 }
 
@@ -67,8 +67,8 @@ void update(void)
 	previousFrameTime = SDL_GetTicks();
 	
 	mesh.rotation.x += 0.01;
-	mesh.rotation.y += 0.01;
-	mesh.rotation.z += 0.01;
+	mesh.rotation.y += 0.00;
+	mesh.rotation.z += 0.00;
 
 	int numFaces = array_length(mesh.faces);
 	for (int i = 0; i < numFaces; i++)
