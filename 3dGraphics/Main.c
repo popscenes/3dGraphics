@@ -10,16 +10,25 @@
 triangle_t* trianglesToRender = NULL;
 
 float fovFactor = 640;
-vec3_t camer_position = { 0,0,-5 };
+vec3_t camer_position = { 0,0,0};
 
 bool is_running;
+
+bool renderPoints;
+bool renderLines;
+bool renderTriangles;
+bool dobackFaceCulling;
 
 int previousFrameTime = 0;
 
 void setup(void)
 {
-	loadObjDataFile("./assets/f22.obj");
-	//LoadCubeMeshData();
+	renderPoints = true;
+	renderLines = true;
+	renderTriangles = true;
+	dobackFaceCulling = true;
+	LoadCubeMeshData();
+	//loadObjDataFile("./assets/f22.obj");
 }
 
 void processInput(void)
@@ -37,7 +46,40 @@ void processInput(void)
 			{
 				is_running = false;
 			}
+			if (event.key.keysym.sym == SDLK_1)
+			{
+				renderLines = true;
+				renderPoints = true;
+				renderTriangles = false;
+			}
+			if (event.key.keysym.sym == SDLK_2)
+			{
+				renderLines = true;
+				renderPoints = false;
+				renderTriangles = false;
+			}
+			if (event.key.keysym.sym == SDLK_3)
+			{
+				renderLines = false;
+				renderPoints = false;
+				renderTriangles = true;
+			}
+			if (event.key.keysym.sym == SDLK_4)
+			{
+				renderLines = true;
+				renderPoints = false;
+				renderTriangles = true;
+			}
+			if (event.key.keysym.sym == SDLK_c)
+			{
+				dobackFaceCulling = true;
+			}
+			if (event.key.keysym.sym == SDLK_d)
+			{
+				dobackFaceCulling = false;
+			}
 			break;
+
 		default:
 			break;
 	}
@@ -67,8 +109,8 @@ void update(void)
 	previousFrameTime = SDL_GetTicks();
 	
 	mesh.rotation.x += 0.01;
-	mesh.rotation.y += 0.00;
-	mesh.rotation.z += 0.00;
+	mesh.rotation.y += 0.01;
+	mesh.rotation.z += 0.01;
 
 	int numFaces = array_length(mesh.faces);
 	for (int i = 0; i < numFaces; i++)
@@ -82,7 +124,10 @@ void update(void)
 		faceVerticies[2] = mesh.vertices[meshFace.c-1];
 
 
-		triangle_t projectedTriange;
+		
+
+		vec3_t transformedVerticies[3];
+
 		for (int j = 0; j < 3; j++)
 		{
 			vec3_t transformedVertex = faceVerticies[j];
@@ -90,15 +135,50 @@ void update(void)
 			transformedVertex = vec3RotateY(transformedVertex, mesh.rotation.y);
 			transformedVertex = vec3RotateZ(transformedVertex, mesh.rotation.z);
 
-			transformedVertex.z -= camer_position.z;
-
-			vec2_t projectedPoint = project(transformedVertex);
-
-			projectedPoint.x += (windowWidth / 2);
-			projectedPoint.y += (windowHeight / 2);
-
-			projectedTriange.points[j] = projectedPoint;
+			transformedVertex.z += 5;
+			transformedVerticies[j] = transformedVertex;
 		}
+
+		//backface culling - clockwise
+		vec3_t vectorA = transformedVerticies[0];
+		vec3_t vectorB = transformedVerticies[1];
+		vec3_t vectorC = transformedVerticies[2];
+
+		vec3_t vecAB = Vect3Subtract(vectorB, vectorA);
+		vec3_t vecAC = Vect3Subtract(vectorC, vectorA);
+
+		Vec3Normalize(&vecAB);
+		Vec3Normalize(&vecAC);
+
+		vec3_t normal = Vec3Cross(vecAB, vecAC);
+		Vec3Normalize(&normal);
+
+		vec3_t cameraRay = Vect3Subtract(camer_position, vectorA);
+
+		float dotNormalCamera = Vec3dot(normal, cameraRay);
+
+		if (dotNormalCamera < 0 && dobackFaceCulling)
+		{
+			continue;
+		}
+		vec2_t projectedPoints[3];
+
+		for (int j = 0; j < 3; j++)
+		{
+			projectedPoints[j] = project(transformedVerticies[j]);
+
+			projectedPoints[j].x += (windowWidth / 2);
+			projectedPoints[j].y += (windowHeight / 2);
+		}
+
+		triangle_t projectedTriange = {
+			.points = {
+				{projectedPoints[0].x, projectedPoints[0].y},
+				{projectedPoints[1].x, projectedPoints[1].y},
+				{projectedPoints[2].x, projectedPoints[2].y},
+			 },
+			.colour = meshFace.colour
+		};
 		
 		array_push(trianglesToRender, projectedTriange);
 	}
@@ -111,17 +191,36 @@ void render(void)
 	for (int i = 0; i < numTriangles; i++)
 	{
 		triangle_t triangleToRender = trianglesToRender[i];
-		drawRectangle(triangleToRender.points[0].x, triangleToRender.points[0].y, 4, 4, 0xFFFFFF00);
-		drawRectangle(triangleToRender.points[1].x, triangleToRender.points[1].y, 4, 4, 0xFFFFFF00);
-		drawRectangle(triangleToRender.points[2].x, triangleToRender.points[2].y, 4, 4, 0xFFFFFF00);
+		if (renderPoints)
+		{
+			
+			drawRectangle(triangleToRender.points[0].x, triangleToRender.points[0].y, 4, 4, 0xFFFFFF00);
+			drawRectangle(triangleToRender.points[1].x, triangleToRender.points[1].y, 4, 4, 0xFFFFFF00);
+			drawRectangle(triangleToRender.points[2].x, triangleToRender.points[2].y, 4, 4, 0xFFFFFF00);
+		}
 
-		drawTriangle(
-			triangleToRender.points[0].x, triangleToRender.points[0].y,
-			triangleToRender.points[1].x, triangleToRender.points[1].y,
-			triangleToRender.points[2].x, triangleToRender.points[2].y,
-			0xFF00FF00
-		);
+		if (renderTriangles)
+		{
+			drawFilledTriangle(
+				triangleToRender.points[0].x, triangleToRender.points[0].y,
+				triangleToRender.points[1].x, triangleToRender.points[1].y,
+				triangleToRender.points[2].x, triangleToRender.points[2].y,
+				triangleToRender.colour
+			);
+		}
+
+		if (renderLines)
+		{
+			drawTriangle(
+				triangleToRender.points[0].x, triangleToRender.points[0].y,
+				triangleToRender.points[1].x, triangleToRender.points[1].y,
+				triangleToRender.points[2].x, triangleToRender.points[2].y,
+				0xFFFFFFFF
+			);
+		}
 	}
+
+	//drawFilledTriangle(300, 100, 50, 400, 500, 700, 0xFF00FF00);
 
 	array_free(trianglesToRender);
 	renderColourBuffer();
